@@ -1,7 +1,7 @@
 function App() {
   return (
-    <main className="w-full min-h-screen flex justify-center items-center">
-      <h1 className="font-semibold text-3xl">Learn React VIP</h1>
+    <main className="flex justify-center bg-blue-600 min-h-screen items-center">
+      <h1>Hello World!</h1>
     </main>
   );
 }
