@@ -8,9 +8,9 @@ const Button = (props) => {
   } = props;
   return (
     <button
-      className={`h-10 px-6 font-semibold rounded-md ${classname} text-white`}
+      className={`h-9 px-4 font-semibold rounded-md ${classname} text-white text-sm`}
       type={type}
-      onClick={() => onClick()} //ini belum digunakan sebetulnya, jadi dihapus juga tidak apa
+      onClick={onClick}
     >
       {children}
     </button>
