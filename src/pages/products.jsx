@@ -1,4 +1,4 @@
-import { Fragment, useState } from "react";
+import { Fragment, useState, useEffect } from "react";
 import CardProduct from "../components/Fragments/CardProduct";
 import Button from "../components/Elements/Button";
 import Counter from "../components/Fragments/Counter";
@@ -33,38 +33,41 @@ const products = [
 const email = localStorage.getItem("email");
 
 const ProductPage = () => {
-  // NOTE_1 : ini membuat state cart, jadi jika membuat state dengan useState, itu statenya bisa di isi apa saja, di contohnya di isi dengan array of object, dan object nya baru ada 1.
-  const [cart, setCart] = useState([
-    {
-      id: 1,
-      qty: 1,
-    },
-  ]);
+  const [cart, setCart] = useState([]);
+  const [totalPrice, setTotalPrice] = useState(0);
 
-  // jadi untuk fungsi add to cart nya itu kita butuh buat event nya di sini lalu kirim ke childnya yaitu component button
+  // ini akan memasukan sesuatu ke dalam state cart, setelah componentnya dibuat.
+  useEffect(() => {
+    // ini maksudnya dia itu jadi product default kalau component product page baru di mounting, lalu akan kembali ke componentDidMount untuk mengecek apakah ada perubahan dalama state cart(karena ini kan ngarahnya ke state cart), nah kalau ada perubahan, perubahan tersebut taro lagi atau render lagi, jadi itulah didMount di bawah ini
+    // btw useEffet bisa buat componentDidMount dan componentDidUpdate yah, nah ini contoh componentDidMount nya ya.
+    // karena sebelum componentDidMount kan ke constructor lalu ke render, setelah render baru ke componentDidMount ini, nah ternyata si useEffect ini memberikan nilai default untuk state cart, maka jadi deh pas pertama kalau di render component ProductPage ini langsung ada product nya, jadi tidak kosong (ini sewaktu-waktu kalau saya lupa, kenapa pas pertama website nya di render ko langsung ada default product nya, padahal belum di pilih productnya atau belum di jalankan event addToCart nya).
+    setCart(JSON.parse(localStorage.getItem("cart")) || []); // ambil dari localStorage kalau tidak ada ya biarkan saja cart nya kosong
+    // kalau ini untuk mengubah string yg di dapat dari localstorage menjadi JSON
+  }, []);
+
+  useEffect(() => {
+    // karena kalau dilihat di cart nya itu isinya hanya id dan qty, nah untuk mendapatkan price nya itu harus di cari dulu di array products
+    if (cart.length > 0) {
+      const sum = cart.reduce((acc, item) => {
+        const product = products.find((product) => product.id === item.id);
+        return acc + product.price * item.qty;
+      }, 0);
+      setTotalPrice(sum);
+      localStorage.setItem("cart", JSON.stringify(cart)); // ini ubah JSOn ke string agar bisa disimpan ke localStorage, karena di local storage hanya bisa menyimpan string
+    }
+    // lalu ketika ada perubahan di cart nya, maka diubahlah total price nya dan juga ubah yg ada di database nya atau localStorage
+  }, [cart]);
+
   const handleAddToCart = (id) => {
-    // ini jika di cart ada item yang sama dengan product yg d products maka kita set cart nya dengan ini...
     if (cart.find((item) => item.id === id)) {
-      // set cart nya disamakan dulu id product di cart  dengan id product yg sama (jujur saya jg ini masih belum paham karena ini ambigu, kan tadi sudah di cek ya kalau id yg di cart sama dengan id yg di product id, kenapa di cek lagi di cart ini?hehe).
       setCart(
         cart.map((item) =>
           item.id === id ? { ...item, qty: item.qty + 1 } : item
         )
       );
     } else {
-      // kalau item nya belum ada maka tambahkan ke cart nya, atau buat objek baru dengan key "id: id" (atau kalau key dari object sama value nya sama cukup tulis aja id) dari product id yg di event handle add to cart, lalu buat juga key "qty: 1"
       setCart([...cart, { id, qty: 1 }]);
     }
-    // jadi semua data di cart sebelumnya itu dimasukan lagi ke cart yg akan di ubah.
-    // setCart([
-    //   // menggunakan spread operator, membawa data cart sebelumnya, lalu di tambah dengan data cart yg baru sesuai id product.
-    //   ...cart,
-    //   {
-    //     id,
-    //     qty: 1,
-    //   },
-    // ]);
-    // alur nya gini: kan ada banyak card product, dan masing2-nya mempunyai product id sendiri dan juga pasti ada button add to cart nya sendiri kan tiap card product, nah kita pake product id itu, jadi ketika salah satu button add to cart nya di klik maka akan mengirim id product yg sesuai(ini mengirim nya dari component cardProduct ya event nya di sana). Dan id itu di pakai untuk menampilkan data ke cart, jadi data yang di kirim ke cart itu id productnya dan tampilkan itu.
   };
 
   const handleLogout = () => {
@@ -99,12 +102,6 @@ const ProductPage = () => {
         </div>
         <div className="w-3/12 -ml-12">
           <h1 className="text-xl font-bold text-blue-600 mb-2">Cart</h1>
-          {/* Lanjutan NOTE_1 : dan di sini mencoba menampilkankan isi dari state cart, yang dimana state cart ini adalah array of object, dan baru ada 1 object. */}
-          {/* <ul>
-            {cart.map((item) => (
-              <li key={item.id}>{item.id}</li>
-            ))}
-          </ul> */}
           <table className="text-left text-xs table-auto border-separate border-spacing-x-5 -ml-5">
             <thead>
               <tr>
@@ -116,7 +113,6 @@ const ProductPage = () => {
             </thead>
             <tbody>
               {cart.map((item) => {
-                // buat variabel product lalu ambil product id dari variabel products di atas halaman ini lalu cari berdasarkan kesamaan id nya (item.id itu adalah id di dalam cart nya ya).
                 const product = products.find(
                   (product) => product.id === item.id
                 );
@@ -139,15 +135,31 @@ const ProductPage = () => {
                   </tr>
                 );
               })}
+              <tr>
+                <td colSpan={3}>
+                  <b>Total Price</b>
+                </td>
+                <td>
+                  <b>
+                    {" "}
+                    {totalPrice.toLocaleString("id-ID", {
+                      style: "currency",
+                      currency: "IDR",
+                    })}
+                  </b>
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>
       </div>
-      <div className="my-5 flex justify-center">
+      {/* <div className="my-5 flex justify-center">
         <Counter />
-      </div>
+      </div> */}
     </Fragment>
   );
 };
 
 export default ProductPage;
+
+// jadi commit kali ini intinya untuk melihat peng-implementasian hooks useEffect yg dimana ini merepresentasikan lifecycle component pada functional component pada react.
