@@ -1,4 +1,4 @@
-import { Fragment, useState, useEffect } from "react";
+import { Fragment, useState, useEffect, useRef } from "react";
 import CardProduct from "../components/Fragments/CardProduct";
 import Button from "../components/Elements/Button";
 import Counter from "../components/Fragments/Counter";
@@ -36,27 +36,26 @@ const ProductPage = () => {
   const [cart, setCart] = useState([]);
   const [totalPrice, setTotalPrice] = useState(0);
 
-  // ini akan memasukan sesuatu ke dalam state cart, setelah componentnya dibuat.
   useEffect(() => {
-    // ini maksudnya dia itu jadi product default kalau component product page baru di mounting, lalu akan kembali ke componentDidMount untuk mengecek apakah ada perubahan dalama state cart(karena ini kan ngarahnya ke state cart), nah kalau ada perubahan, perubahan tersebut taro lagi atau render lagi, jadi itulah didMount di bawah ini
-    // btw useEffet bisa buat componentDidMount dan componentDidUpdate yah, nah ini contoh componentDidMount nya ya.
-    // karena sebelum componentDidMount kan ke constructor lalu ke render, setelah render baru ke componentDidMount ini, nah ternyata si useEffect ini memberikan nilai default untuk state cart, maka jadi deh pas pertama kalau di render component ProductPage ini langsung ada product nya, jadi tidak kosong (ini sewaktu-waktu kalau saya lupa, kenapa pas pertama website nya di render ko langsung ada default product nya, padahal belum di pilih productnya atau belum di jalankan event addToCart nya).
-    setCart(JSON.parse(localStorage.getItem("cart")) || []); // ambil dari localStorage kalau tidak ada ya biarkan saja cart nya kosong
-    // kalau ini untuk mengubah string yg di dapat dari localstorage menjadi JSON
+    setCart(JSON.parse(localStorage.getItem("cart")) || []);
   }, []);
 
   useEffect(() => {
-    // karena kalau dilihat di cart nya itu isinya hanya id dan qty, nah untuk mendapatkan price nya itu harus di cari dulu di array products
     if (cart.length > 0) {
       const sum = cart.reduce((acc, item) => {
         const product = products.find((product) => product.id === item.id);
         return acc + product.price * item.qty;
       }, 0);
       setTotalPrice(sum);
-      localStorage.setItem("cart", JSON.stringify(cart)); // ini ubah JSOn ke string agar bisa disimpan ke localStorage, karena di local storage hanya bisa menyimpan string
+      localStorage.setItem("cart", JSON.stringify(cart));
     }
-    // lalu ketika ada perubahan di cart nya, maka diubahlah total price nya dan juga ubah yg ada di database nya atau localStorage
   }, [cart]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("email");
+    localStorage.removeItem("password");
+    window.location.href = "/login";
+  };
 
   const handleAddToCart = (id) => {
     if (cart.find((item) => item.id === id)) {
@@ -70,11 +69,26 @@ const ProductPage = () => {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("email");
-    localStorage.removeItem("password");
-    window.location.href = "/login";
+  // useRef
+  const cartRef = useRef(JSON.parse(localStorage.getItem("cart")) || []);
+
+  const handleAddToCartRef = (id) => {
+    cartRef.current = [...cartRef.current, { id, qty: 1 }];
+    localStorage.setItem("cart", JSON.stringify(cartRef.current));
   };
+
+  const totalPriceRef = useRef(null);
+
+  // console.log(totalPriceRef.current);
+
+  // useEffect bisa digunakan berkali-kali, walaupun dengan dependencies yg sama.
+  useEffect(() => {
+    if (cart.length > 0) {
+      totalPriceRef.current.style.display = "table-row";
+    } else {
+      totalPriceRef.current.style.display = "none";
+    }
+  }, [cart]);
 
   return (
     <Fragment>
@@ -135,7 +149,7 @@ const ProductPage = () => {
                   </tr>
                 );
               })}
-              <tr>
+              <tr ref={totalPriceRef}>
                 <td colSpan={3}>
                   <b>Total Price</b>
                 </td>
@@ -161,5 +175,3 @@ const ProductPage = () => {
 };
 
 export default ProductPage;
-
-// jadi commit kali ini intinya untuk melihat peng-implementasian hooks useEffect yg dimana ini merepresentasikan lifecycle component pada functional component pada react.
