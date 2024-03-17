@@ -1,16 +1,16 @@
-import { useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import Button from "../Elements/Button";
 import InputForm from "../Elements/Input";
 import { login } from "../../services/auth.service";
 import { data } from "autoprefixer";
+import { DarkMode } from "../../context/DarkMode";
 
 const FormLogin = () => {
   const [loginFailed, setLoginFailed] = useState("");
+  const { isDarkMode, setIsDarkMode } = useContext(DarkMode);
+
   const handleLogin = (event) => {
     event.preventDefault();
-    // localStorage.setItem("email", event.target.email.value);
-    // localStorage.setItem("password", event.target.password.value);
-    // window.location.href = "/products";
 
     const data = {
       username: event.target.username.value,
@@ -23,7 +23,6 @@ const FormLogin = () => {
         window.location.href = "/products";
       } else {
         setLoginFailed(res.response.data);
-        // console.log(res.response.data);
       }
     });
   };
@@ -49,7 +48,12 @@ const FormLogin = () => {
         placeholder="********"
         name="password"
       />
-      <Button classname="bg-blue-600 w-full" type="submit">
+      <Button
+        classname={`bg-blue-600 w-full ${
+          isDarkMode && "bg-blue-600 hover:bg-blue-700"
+        }`}
+        type="submit"
+      >
         Login
       </Button>
       {loginFailed && (

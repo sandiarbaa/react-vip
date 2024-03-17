@@ -1,7 +1,11 @@
+import { useContext } from "react";
+import { DarkMode } from "../../context/DarkMode";
 import Button from "../Elements/Button";
 import InputForm from "../Elements/Input";
 
 const FormRegister = () => {
+  const { isDarkMode, setIsDarkMode } = useContext(DarkMode);
+
   return (
     <form action="">
       <InputForm
@@ -28,7 +32,13 @@ const FormRegister = () => {
         placeholder="********"
         name="confirmPassword"
       />
-      <Button classname="bg-blue-600 w-full">Register</Button>
+      <Button
+        classname={`bg-blue-600 w-full ${
+          isDarkMode && "bg-blue-600 hover:bg-blue-700"
+        }`}
+      >
+        Register
+      </Button>
     </form>
   );
 };
